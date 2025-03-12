@@ -14,23 +14,13 @@ class AppDrawer extends StatelessWidget {
           children: [
             Container(
               width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    primaryColor.withOpacity(0.7),
-                    primaryColor,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
+              padding: EdgeInsets.symmetric(vertical: 30, horizontal: 20),
               child: Center(
                 child: Text(
                   'Bem Vindo!',
                   style: TextStyle(
                     fontSize: 26,
-                    color: Colors.white,
+                    color: primaryColor,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -67,6 +57,21 @@ class AppDrawer extends StatelessWidget {
                     .pushReplacementNamed(AppRoutes.ORDERS);
               },
             ),
+            CupertinoButton(
+              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+              child: Row(
+                children: [
+                  Icon(CupertinoIcons.pencil, color: primaryColor),
+                  SizedBox(width: 16),
+                  Text('Gerenciar Produtos',
+                      style: TextStyle(fontSize: 18, color: primaryColor)),
+                ],
+              ),
+              onPressed: () {
+                Navigator.of(context)
+                    .pushReplacementNamed(AppRoutes.PRODUCTS);
+              },
+            ),
           ],
         ),
       ),
@@ -76,27 +81,17 @@ class AppDrawer extends StatelessWidget {
   Widget _buildAndroidDrawer(BuildContext context, Color primaryColor) {
     return Drawer(
       backgroundColor:
-      Theme.of(context).scaffoldBackgroundColor, // Fundo definido
+      Theme.of(context).scaffoldBackgroundColor,
       child: Column(
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  primaryColor.withOpacity(0.7),
-                  primaryColor,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
             child: Align(
               alignment: Alignment.bottomLeft,
               child: Text(
                 'Bem Vindo!',
                 style: TextStyle(
                   fontSize: 26,
-                  color: Colors.white,
+                  color: primaryColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -123,6 +118,18 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               Navigator.of(context)
                   .pushReplacementNamed(AppRoutes.ORDERS);
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.edit, size: 28, color: primaryColor),
+            title: Text(
+              'Gerenciar Produtos',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            onTap: () {
+              Navigator.of(context)
+                  .pushReplacementNamed(AppRoutes.PRODUCTS);
             },
           ),
         ],

@@ -4,6 +4,8 @@ import 'package:terra_fertil/models/order_list.dart';
 import 'package:terra_fertil/models/product_list.dart';
 import 'package:terra_fertil/pages/cart_page.dart';
 import 'package:terra_fertil/pages/orders_page.dart';
+import 'package:terra_fertil/pages/product_form_page.dart';
+import 'package:terra_fertil/pages/product_page.dart';
 import 'package:terra_fertil/pages/products_overview_page.dart';
 import 'package:terra_fertil/utils/app_routes.dart';
 import 'package:terra_fertil/pages/product_detail_page.dart';
@@ -63,6 +65,8 @@ class MyApp extends StatelessWidget {
           AppRoutes.PRODUCT_DETAIL: (ctx) => ProductDetailPage(),
           AppRoutes.CART: (ctx) => CartPage(),
           AppRoutes.ORDERS: (ctx) => OrdersPage(),
+          AppRoutes.PRODUCTS: (ctx) => ProductPage(),
+          AppRoutes.PRODUCTS_FORM: (ctx) => ProductFormPage(),
         },
       ),
     );
