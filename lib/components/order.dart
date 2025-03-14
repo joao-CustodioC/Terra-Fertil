@@ -24,20 +24,8 @@ class _OrderWidgetState extends State<OrderWidget> {
     if (Platform.isIOS) {
       return Container(
         margin: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
         child: Column(
           children: [
-            // Cabeçalho do pedido
             Padding(
               padding: EdgeInsets.all(12),
               child: Row(

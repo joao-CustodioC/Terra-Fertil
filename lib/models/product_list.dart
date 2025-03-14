@@ -1,40 +1,102 @@
+import 'dart:convert';
 import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:terra_fertil/data/dummy_data.dart';
+import 'package:terra_fertil/exception/http_exception.dart';
 import 'package:terra_fertil/models/product.dart';
+import 'package:http/http.dart' as http;
+import 'package:terra_fertil/utils/constants.dart';
 
 class ProductList with ChangeNotifier {
-  final List<Product> _items = dummyProducts;
+  final List<Product> _items = [];
 
   List<Product> get items => [..._items];
 
   List<Product> get favoriteItems =>
       _items.where((prod) => prod.isFavorite).toList();
 
-  void addProduct(Product product) {
-    _items.add(product);
+  Future<void> loadProducts() async {
+    _items.clear();
+    final response = await http.get(Uri.parse('${Constants.PRODUCT_BASE_URL}.json'));
+    if (response.body == 'null') return;
+    Map<String, dynamic> data = jsonDecode(response.body);
+    data.forEach((prductId, productData) {
+      _items.add(
+        Product(
+          id: prductId,
+          title: productData['title'],
+          description: productData['description'],
+          price: productData['price'],
+          isFavorite: productData['isFavorite'],
+          imageUrl: productData['imageUrl'],
+        ),
+      );
+    });
     notifyListeners();
   }
 
-  void updateProduct(Product product) {
+  Future<void> addProduct(Product product) async {
+    final response = await http.post(
+      Uri.parse('${Constants.PRODUCT_BASE_URL}.json'),
+      body: jsonEncode({
+        'title': product.title,
+        'description': product.description,
+        'price': product.price,
+        'imageUrl': product.imageUrl,
+        'isFavorite': product.isFavorite,
+      }),
+    );
+    final id = jsonDecode(response.body)['name'];
+    _items.add(
+      Product(
+        id: id,
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        imageUrl: product.imageUrl,
+      ),
+    );
+    notifyListeners();
+  }
+
+  Future<void> updateProduct(Product product) async {
     int index = _items.indexWhere((p) => p.id == product.id);
+
     if (index >= 0) {
+      await http.patch(
+        Uri.parse('${Constants.PRODUCT_BASE_URL}/${product.id}.json'),
+        body: jsonEncode({
+          'title': product.title,
+          'description': product.description,
+          'price': product.price,
+          'imageUrl': product.imageUrl,
+          'isFavorite': product.isFavorite,
+        }),
+      );
       _items[index] = product;
       notifyListeners();
     }
   }
 
-  void removeProduct(Product product) {
+  Future<void> removeProduct(Product product) async {
     int index = _items.indexWhere((p) => p.id == product.id);
     if (index >= 0) {
-      _items.removeWhere((p) => p.id == product.id);
+      _items.remove(product);
       notifyListeners();
+
+      final reponse = await http.delete(Uri.parse('${Constants.PRODUCT_BASE_URL}/${product.id}'));
+
+      if (reponse.statusCode >= 400) {
+        _items.insert(index, product);
+        notifyListeners();
+        throw HttpExceptionn(
+          msg: 'Não foi posível excluir o produto!',
+          statusCode: reponse.statusCode,
+        );
+      }
     }
   }
 
-
-  void saveProductFromData(Map<String, Object> data) {
+  Future<void> saveProductFromData(Map<String, Object> data) {
     bool hasId = data['id'] != null;
     final newProduct = Product(
       id: hasId ? data['id'] as String : Random().nextDouble().toString(),
@@ -45,26 +107,9 @@ class ProductList with ChangeNotifier {
     );
 
     if (hasId) {
-      updateProduct(newProduct);
+      return updateProduct(newProduct);
     } else {
-      addProduct(newProduct);
+      return addProduct(newProduct);
     }
-    notifyListeners();
   }
 }
-
-// bool _showFavoriteOnly = false;
-//
-// List<Product> get items {
-//   if (_showFavoriteOnly) {
-//     return _items.where((prod) => prod.isFavorite).toList();
-//   }
-//   return [..._items];
-// }
-//
-// void showFavoriteOnly() {
-//   _showFavoriteOnly = true;
-// }
-// void showAll() {
-//   _showFavoriteOnly = false;
-// }

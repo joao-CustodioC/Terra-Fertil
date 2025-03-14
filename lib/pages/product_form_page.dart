@@ -18,6 +18,8 @@ class _ProductFormPageState extends State<ProductFormPage> {
   final _urlFocus = FocusNode();
   final _imageUrlController = TextEditingController();
 
+  bool _isloading = false;
+
   final _formKey = GlobalKey<FormState>();
   final Map<String, Object> _formData = {};
 
@@ -58,22 +60,67 @@ class _ProductFormPageState extends State<ProductFormPage> {
     setState(() {});
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
+    setState(() {
+      _isloading = true;
+    });
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) {
+      setState(() {
+        _isloading = false;
+      });
       return;
     }
     _formKey.currentState?.save();
-    Provider.of<ProductList>(
-      context,
-      listen: false,
-    ).saveProductFromData(_formData);
-    Navigator.of(context).pop();
+
+    try {
+      await Provider.of<ProductList>(context, listen: false)
+          .saveProductFromData(_formData);
+      Navigator.of(context).pop();
+    } catch (error) {
+      setState(() {
+        _isloading = false;
+      });
+      if (Platform.isIOS) {
+        await showCupertinoDialog(
+          context: context,
+          builder: (ctx) => CupertinoAlertDialog(
+            title: const Text("Ocorreu um erro!"),
+            content: Text("Ocorreu um erro ao salvar o produto!"),
+            actions: [
+              CupertinoDialogAction(
+                child: const Text("Ok"),
+                onPressed: () => Navigator.of(ctx).pop(),
+              ),
+            ],
+          ),
+        );
+      } else {
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text("Ocorreu um erro!"),
+            content: Text("Ocorreu um erro ao salvar o produto!"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text("Ok"),
+              ),
+            ],
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isloading = false;
+      });
+    }
   }
 
   bool isValidImage(String url) {
     final isValidUrl = Uri.tryParse(url)?.hasAbsolutePath ?? false;
-    final endWithFile = url.toLowerCase().endsWith('.png') ||
+    final endWithFile =
+        url.toLowerCase().endsWith('.png') ||
         url.toLowerCase().endsWith('.jpg') ||
         url.toLowerCase().endsWith('.jpeg');
     return isValidUrl && endWithFile;
@@ -82,9 +129,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
   InputDecoration _buildInputDecoration(String label) {
     return InputDecoration(
       labelText: label,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
     );
   }
@@ -93,20 +138,21 @@ class _ProductFormPageState extends State<ProductFormPage> {
     if (_imageUrlController.text.isEmpty) return;
     showDialog(
       context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.black,
-        insetPadding: const EdgeInsets.all(10),
-        child: GestureDetector(
-          onTap: () => Navigator.of(ctx).pop(),
-          child: Container(
-            color: Colors.black,
-            child: Image.network(
-              _imageUrlController.text,
-              fit: BoxFit.contain,
+      builder:
+          (ctx) => Dialog(
+            backgroundColor: Colors.black,
+            insetPadding: const EdgeInsets.all(10),
+            child: GestureDetector(
+              onTap: () => Navigator.of(ctx).pop(),
+              child: Container(
+                color: Colors.black,
+                child: Image.network(
+                  _imageUrlController.text,
+                  fit: BoxFit.contain,
+                ),
+              ),
             ),
           ),
-        ),
-      ),
     );
   }
 
@@ -115,187 +161,211 @@ class _ProductFormPageState extends State<ProductFormPage> {
     final isIOS = Platform.isIOS;
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
-      appBar: isIOS
-          ? CupertinoNavigationBar(
-        leading: GestureDetector(
-          onTap: () => Navigator.of(context).pop(),
-          child: const Icon(
-            CupertinoIcons.back,
-            color: CupertinoColors.white,
-          ),
-        ),
-        middle: const Text(
-          "Formulário Produtos",
-          style: TextStyle(color: CupertinoColors.white),
-        ),
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
-          onPressed: _submitForm,
-          child: const Icon(
-            CupertinoIcons.add_circled_solid,
-            color: CupertinoColors.white,
-          ),
-        ),
-        backgroundColor: Theme.of(context).primaryColor,
-      )
-          : AppBar(
-        title: const Text(
-          "Formulário Produtos",
-          style: TextStyle(fontSize: 18),
-        ),
-        backgroundColor: Theme.of(context).primaryColor,
-        elevation: 4,
-        actions: [
-          IconButton(
-            onPressed: _submitForm,
-            icon: const Icon(Icons.save),
-          )
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(15),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              // Campo Título
-              TextFormField(
-                initialValue: _formData['title']?.toString(),
-                decoration: _buildInputDecoration('Nome'),
-                textInputAction: TextInputAction.next,
-                onFieldSubmitted: (_) {
-                  FocusScope.of(context).requestFocus(_priceFocus);
-                },
-                onSaved: (title) => _formData['title'] = title ?? '',
-                validator: (_title) {
-                  final title = _title ?? '';
-                  if (title.trim().isEmpty) {
-                    return 'Nome é obrigatório.';
-                  }
-                  if (title.trim().length < 3) {
-                    return 'O nome precisa de pelo menos 3 caracteres.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 15),
-              // Campo Preço
-              TextFormField(
-                initialValue: _formData['price']?.toString(),
-                decoration: _buildInputDecoration('Preço'),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                textInputAction: TextInputAction.next,
-                focusNode: _priceFocus,
-                onFieldSubmitted: (_) {
-                  FocusScope.of(context).requestFocus(_descriptionFocus);
-                },
-                onSaved: (price) => _formData['price'] = double.parse(price ?? '0'),
-                validator: (_price) {
-                  final priceString = _price ?? '-1';
-                  final price = double.tryParse(priceString) ?? -1;
-                  if (price <= 0) {
-                    return 'Informe um preço válido.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 15),
-              // Campo Descrição
-              TextFormField(
-                initialValue: _formData['description']?.toString(),
-                decoration: _buildInputDecoration('Descrição'),
-                keyboardType: TextInputType.multiline,
-                maxLines: 3,
-                focusNode: _descriptionFocus,
-                onSaved: (description) => _formData['description'] = description ?? '',
-                validator: (_description) {
-                  final description = _description ?? '';
-                  if (description.trim().isEmpty) {
-                    return 'Descrição é obrigatória.';
-                  }
-                  if (description.trim().length < 20) {
-                    return 'A descrição precisa de pelo menos 20 caracteres.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 15),
-              // Campo URL da Imagem com preview e onTap para visualizar
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: TextFormField(
-                      decoration: _buildInputDecoration('URL da Imagem'),
-                      keyboardType: TextInputType.url,
-                      textInputAction: TextInputAction.done,
-                      controller: _imageUrlController,
-                      focusNode: _urlFocus,
-                      onFieldSubmitted: (_) => _submitForm(),
-                      onSaved: (imageUrl) => _formData['imageUrl'] = imageUrl ?? '',
-                      validator: (_imageUrl) {
-                        final imageUrl = _imageUrl ?? '';
-                        if (!isValidImage(imageUrl)) {
-                          return 'Informe uma URL válida.';
-                        }
-                        return null;
-                      },
-                    ),
+      appBar:
+          isIOS
+              ? CupertinoNavigationBar(
+                leading: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: const Icon(
+                    CupertinoIcons.back,
+                    color: CupertinoColors.white,
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    flex: 1,
-                    child: GestureDetector(
-                      onTap: _showFullImage,
-                      child: Container(
-                        height: 120,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.grey),
-                          color: Colors.grey.shade200,
-                        ),
-                        alignment: Alignment.center,
-                        child: _imageUrlController.text.isEmpty
-                            ? const Text(
-                          'Sem imagem',
-                          style: TextStyle(color: Colors.grey),
-                        )
-                            : ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: FadeInImage.assetNetwork(
-                            placeholder: 'assets/images/placeholder.png',
-                            image: _imageUrlController.text,
-                            fit: BoxFit.cover,
-                            height: 120,
-                            width: double.infinity,
-                          ),
-                        ),
-                      ),
-                    ),
+                ),
+                middle: const Text(
+                  "Formulário Produtos",
+                  style: TextStyle(color: CupertinoColors.white),
+                ),
+                trailing: CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: _submitForm,
+                  child: const Icon(
+                    CupertinoIcons.add_circled_solid,
+                    color: CupertinoColors.white,
+                  ),
+                ),
+                backgroundColor: Theme.of(context).primaryColor,
+              )
+              : AppBar(
+                title: const Text(
+                  "Formulário Produtos",
+                  style: TextStyle(fontSize: 18),
+                ),
+                backgroundColor: Theme.of(context).primaryColor,
+                elevation: 4,
+                actions: [
+                  IconButton(
+                    onPressed: _submitForm,
+                    icon: const Icon(Icons.save),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-              // Botão Salvar no final do formulário
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _submitForm,
-                  icon: Icon(isIOS ? CupertinoIcons.add_circled_solid : Icons.save),
-                  label: const Text("Salvar"),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+      body:
+          _isloading
+              ? Center(child: CircularProgressIndicator())
+              : Padding(
+                padding: const EdgeInsets.all(15),
+                child: Form(
+                  key: _formKey,
+                  child: ListView(
+                    children: [
+                      // Campo Título
+                      TextFormField(
+                        initialValue: _formData['title']?.toString(),
+                        decoration: _buildInputDecoration('Nome'),
+                        textInputAction: TextInputAction.next,
+                        onFieldSubmitted: (_) {
+                          FocusScope.of(context).requestFocus(_priceFocus);
+                        },
+                        onSaved: (title) => _formData['title'] = title ?? '',
+                        validator: (_title) {
+                          final title = _title ?? '';
+                          if (title.trim().isEmpty) {
+                            return 'Nome é obrigatório.';
+                          }
+                          if (title.trim().length < 3) {
+                            return 'O nome precisa de pelo menos 3 caracteres.';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 15),
+                      // Campo Preço
+                      TextFormField(
+                        initialValue: _formData['price']?.toString(),
+                        decoration: _buildInputDecoration('Preço'),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        textInputAction: TextInputAction.next,
+                        focusNode: _priceFocus,
+                        onFieldSubmitted: (_) {
+                          FocusScope.of(
+                            context,
+                          ).requestFocus(_descriptionFocus);
+                        },
+                        onSaved:
+                            (price) =>
+                                _formData['price'] = double.parse(price ?? '0'),
+                        validator: (_price) {
+                          final priceString = _price ?? '-1';
+                          final price = double.tryParse(priceString) ?? -1;
+                          if (price <= 0) {
+                            return 'Informe um preço válido.';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 15),
+                      // Campo Descrição
+                      TextFormField(
+                        initialValue: _formData['description']?.toString(),
+                        decoration: _buildInputDecoration('Descrição'),
+                        keyboardType: TextInputType.multiline,
+                        maxLines: 3,
+                        focusNode: _descriptionFocus,
+                        onSaved:
+                            (description) =>
+                                _formData['description'] = description ?? '',
+                        validator: (_description) {
+                          final description = _description ?? '';
+                          if (description.trim().isEmpty) {
+                            return 'Descrição é obrigatória.';
+                          }
+                          if (description.trim().length < 20) {
+                            return 'A descrição precisa de pelo menos 20 caracteres.';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 15),
+                      // Campo URL da Imagem com preview e onTap para visualizar
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: TextFormField(
+                              decoration: _buildInputDecoration(
+                                'URL da Imagem',
+                              ),
+                              keyboardType: TextInputType.url,
+                              textInputAction: TextInputAction.done,
+                              controller: _imageUrlController,
+                              focusNode: _urlFocus,
+                              onFieldSubmitted: (_) => _submitForm(),
+                              onSaved:
+                                  (imageUrl) =>
+                                      _formData['imageUrl'] = imageUrl ?? '',
+                              validator: (_imageUrl) {
+                                final imageUrl = _imageUrl ?? '';
+                                if (!isValidImage(imageUrl)) {
+                                  return 'Informe uma URL válida.';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            flex: 1,
+                            child: GestureDetector(
+                              onTap: _showFullImage,
+                              child: Container(
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: Colors.grey),
+                                  color: Colors.grey.shade200,
+                                ),
+                                alignment: Alignment.center,
+                                child:
+                                    _imageUrlController.text.isEmpty
+                                        ? const Text(
+                                          'Sem imagem',
+                                          style: TextStyle(color: Colors.grey),
+                                        )
+                                        : ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                          child: FadeInImage.assetNetwork(
+                                            placeholder:
+                                                'assets/images/placeholder.png',
+                                            image: _imageUrlController.text,
+                                            fit: BoxFit.cover,
+                                            height: 120,
+                                            width: double.infinity,
+                                          ),
+                                        ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      // Botão Salvar no final do formulário
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _submitForm,
+                          icon: Icon(
+                            isIOS
+                                ? CupertinoIcons.add_circled_solid
+                                : Icons.save,
+                          ),
+                          label: const Text("Salvar"),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

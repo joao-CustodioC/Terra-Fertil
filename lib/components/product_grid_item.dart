@@ -4,18 +4,20 @@ import 'package:terra_fertil/models/cart.dart';
 import 'package:terra_fertil/models/product.dart';
 import 'package:terra_fertil/utils/app_routes.dart';
 
+import '../exception/http_exception.dart';
+
 class ProductGridItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final msg = ScaffoldMessenger.of(context);
     final product = Provider.of<Product>(context, listen: false);
     final cart = Provider.of<Cart>(context);
 
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).pushNamed(
-          AppRoutes.PRODUCT_DETAIL,
-          arguments: product,
-        );
+        Navigator.of(
+          context,
+        ).pushNamed(AppRoutes.PRODUCT_DETAIL, arguments: product);
       },
       child: Container(
         decoration: BoxDecoration(
@@ -38,9 +40,7 @@ class ProductGridItem extends StatelessWidget {
             Expanded(
               flex: 5,
               child: ClipRRect(
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                 child: Hero(
                   tag: product.id,
                   child: FadeInImage.assetNetwork(
@@ -74,10 +74,7 @@ class ProductGridItem extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Theme
-                          .of(context)
-                          .colorScheme
-                          .secondary,
+                      color: Theme.of(context).colorScheme.secondary,
                     ),
                   ),
                 ],
@@ -91,23 +88,24 @@ class ProductGridItem extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Consumer<Product>(
-                      builder: (ctx, product, _) =>
-                          Tooltip(
-                            message: product.isFavorite
-                                ? 'Remover dos favoritos'
-                                : 'Adicionar aos favoritos',
-                            child: IconButton(
-                              onPressed: () {
-                                product.toggleFavorite();
-                              },
-                              icon: Icon(
-                                product.isFavorite
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                color: product.isFavorite ? Colors.red : Colors
-                                    .grey,
-                                size: 20,
-                              ),
+                      builder:
+                          (ctx, product, _) => IconButton(
+                            onPressed: () async {
+                              try {
+                                await product.toggleFavorite();
+                              } on HttpExceptionn catch (error) {
+                                msg.showSnackBar(
+                                  SnackBar(content: Text(error.toString())),
+                                );
+                              }
+                            },
+                            icon: Icon(
+                              product.isFavorite
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color:
+                                  product.isFavorite ? Colors.red : Colors.grey,
+                              size: 20,
                             ),
                           ),
                     ),
@@ -117,27 +115,26 @@ class ProductGridItem extends StatelessWidget {
                           cart.addItem(product);
                           ScaffoldMessenger.of(context).hideCurrentSnackBar();
                           ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    'Produto adicionado com sucesso!'),
-                                duration: Duration(seconds: 3),
-                                action: SnackBarAction(
-                                    label: "DESFAZER",
-                                  onPressed: () {
-                                    cart.removeLastItem(product.id);
-                                  },
-                                ),
-                              )
+                            SnackBar(
+                              content: Text('Produto adicionado com sucesso!'),
+                              duration: Duration(seconds: 3),
+                              action: SnackBarAction(
+                                label: "DESFAZER",
+                                onPressed: () {
+                                  cart.removeLastItem(product.id);
+                                },
+                              ),
+                            ),
                           );
                         },
 
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme
-                              .of(context)
-                              .primaryColor,
+                          backgroundColor: Theme.of(context).primaryColor,
                           foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(horizontal: 8,
-                              vertical: 6),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 6,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -151,10 +148,7 @@ class ProductGridItem extends StatelessWidget {
                               color: Color(0xFFFFD700),
                             ),
                             SizedBox(width: 4),
-                            Text(
-                              "Comprar",
-                              style: TextStyle(fontSize: 14),
-                            ),
+                            Text("Comprar", style: TextStyle(fontSize: 14)),
                           ],
                         ),
                       ),
