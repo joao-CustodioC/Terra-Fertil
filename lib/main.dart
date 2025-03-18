@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:terra_fertil/models/auth.dart';
 import 'package:terra_fertil/models/cart.dart';
 import 'package:terra_fertil/models/order_list.dart';
 import 'package:terra_fertil/models/product_list.dart';
+import 'package:terra_fertil/pages/auth_or_home_page.dart';
 import 'package:terra_fertil/pages/cart_page.dart';
 import 'package:terra_fertil/pages/orders_page.dart';
 import 'package:terra_fertil/pages/product_form_page.dart';
 import 'package:terra_fertil/pages/product_page.dart';
-import 'package:terra_fertil/pages/products_overview_page.dart';
 import 'package:terra_fertil/utils/app_routes.dart';
 import 'package:terra_fertil/pages/product_detail_page.dart';
 import 'package:provider/provider.dart';
@@ -20,15 +21,20 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-            create: (_) => ProductList()
+        ChangeNotifierProvider(create: (_) => Auth()),
+        ChangeNotifierProxyProvider<Auth, ProductList>(
+          create: (_) => ProductList(),
+          update:
+              (ctx, auth, previous) =>
+                  ProductList(auth.token ?? '', previous?.items ?? [], auth.userId ?? ''),
         ),
-        ChangeNotifierProvider(
-            create: (_) => Cart()
+        ChangeNotifierProxyProvider<Auth, OrderList>(
+          create: (_) => OrderList(),
+          update:
+              (ctx, auth, previous) =>
+                  OrderList(auth.token ?? '', previous?.items ?? [], auth.userId ?? ''),
         ),
-        ChangeNotifierProvider(
-            create: (_) => OrderList()
-        ),
+        ChangeNotifierProvider(create: (_) => Cart()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -61,7 +67,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
         routes: {
-          AppRoutes.HOME: (ctx) => ProductsOverviewPage(),
+          AppRoutes.AUTH_OR_HOME: (ctx) => AuthOrHomePage(),
           AppRoutes.PRODUCT_DETAIL: (ctx) => ProductDetailPage(),
           AppRoutes.CART: (ctx) => CartPage(),
           AppRoutes.ORDERS: (ctx) => OrdersPage(),

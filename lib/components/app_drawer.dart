@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:terra_fertil/models/auth.dart';
 import 'package:terra_fertil/utils/app_routes.dart';
+import 'package:provider/provider.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({Key? key}) : super(key: key);
@@ -33,13 +35,16 @@ class AppDrawer extends StatelessWidget {
                 children: [
                   Icon(CupertinoIcons.home, color: primaryColor),
                   SizedBox(width: 16),
-                  Text('Loja',
-                      style: TextStyle(fontSize: 18, color: primaryColor)),
+                  Text(
+                    'Loja',
+                    style: TextStyle(fontSize: 18, color: primaryColor),
+                  ),
                 ],
               ),
               onPressed: () {
-                Navigator.of(context)
-                    .pushReplacementNamed(AppRoutes.HOME);
+                Navigator.of(
+                  context,
+                ).pushReplacementNamed(AppRoutes.AUTH_OR_HOME);
               },
             ),
             CupertinoButton(
@@ -48,13 +53,14 @@ class AppDrawer extends StatelessWidget {
                 children: [
                   Icon(CupertinoIcons.square_list, color: primaryColor),
                   SizedBox(width: 16),
-                  Text('Pedidos',
-                      style: TextStyle(fontSize: 18, color: primaryColor)),
+                  Text(
+                    'Pedidos',
+                    style: TextStyle(fontSize: 18, color: primaryColor),
+                  ),
                 ],
               ),
               onPressed: () {
-                Navigator.of(context)
-                    .pushReplacementNamed(AppRoutes.ORDERS);
+                Navigator.of(context).pushReplacementNamed(AppRoutes.ORDERS);
               },
             ),
             CupertinoButton(
@@ -63,13 +69,33 @@ class AppDrawer extends StatelessWidget {
                 children: [
                   Icon(CupertinoIcons.pencil, color: primaryColor),
                   SizedBox(width: 16),
-                  Text('Gerenciar Produtos',
-                      style: TextStyle(fontSize: 18, color: primaryColor)),
+                  Text(
+                    'Gerenciar Produtos',
+                    style: TextStyle(fontSize: 18, color: primaryColor),
+                  ),
                 ],
               ),
               onPressed: () {
-                Navigator.of(context)
-                    .pushReplacementNamed(AppRoutes.PRODUCTS);
+                Navigator.of(context).pushReplacementNamed(AppRoutes.PRODUCTS);
+              },
+            ),
+            CupertinoButton(
+              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+              child: Row(
+                children: [
+                  Icon(CupertinoIcons.delete_left, color: primaryColor),
+                  SizedBox(width: 16),
+                  Text(
+                    'sair',
+                    style: TextStyle(fontSize: 18, color: primaryColor),
+                  ),
+                ],
+              ),
+              onPressed: () {
+                Provider.of<Auth>(context, listen: false).signout();
+                Navigator.of(
+                  context,
+                ).pushReplacementNamed(AppRoutes.AUTH_OR_HOME);
               },
             ),
           ],
@@ -80,8 +106,7 @@ class AppDrawer extends StatelessWidget {
 
   Widget _buildAndroidDrawer(BuildContext context, Color primaryColor) {
     return Drawer(
-      backgroundColor:
-      Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: Column(
         children: [
           DrawerHeader(
@@ -104,8 +129,9 @@ class AppDrawer extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             onTap: () {
-              Navigator.of(context)
-                  .pushReplacementNamed(AppRoutes.HOME);
+              Navigator.of(
+                context,
+              ).pushReplacementNamed(AppRoutes.AUTH_OR_HOME);
             },
           ),
           Divider(),
@@ -116,8 +142,7 @@ class AppDrawer extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             onTap: () {
-              Navigator.of(context)
-                  .pushReplacementNamed(AppRoutes.ORDERS);
+              Navigator.of(context).pushReplacementNamed(AppRoutes.ORDERS);
             },
           ),
           Divider(),
@@ -128,8 +153,21 @@ class AppDrawer extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             onTap: () {
-              Navigator.of(context)
-                  .pushReplacementNamed(AppRoutes.PRODUCTS);
+              Navigator.of(context).pushReplacementNamed(AppRoutes.PRODUCTS);
+            },
+          ),
+          Divider(),
+          ListTile(
+            leading: Icon(Icons.exit_to_app, size: 28, color: primaryColor),
+            title: Text(
+              'Sair',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            onTap: () {
+              Provider.of<Auth>(context, listen: false).signout();
+              Navigator.of(
+                context,
+              ).pushReplacementNamed(AppRoutes.AUTH_OR_HOME);
             },
           ),
         ],

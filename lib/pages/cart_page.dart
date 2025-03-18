@@ -21,7 +21,7 @@ class CartPage extends StatelessWidget {
               ? CupertinoButton.filled(
             child: const Text("Ir para a loja"),
             onPressed: () {
-              Navigator.of(context).pushReplacementNamed(AppRoutes.HOME);
+              Navigator.of(context).pushReplacementNamed(AppRoutes.AUTH_OR_HOME);
             },
           )
               : ElevatedButton(
@@ -33,7 +33,7 @@ class CartPage extends StatelessWidget {
               style: TextStyle(color: Colors.white),
             ),
             onPressed: () {
-              Navigator.of(context).pushReplacementNamed(AppRoutes.HOME);
+              Navigator.of(context).pushReplacementNamed(AppRoutes.AUTH_OR_HOME);
             },
           ),
         ],
@@ -158,6 +158,7 @@ class _CartButtonState extends State<CartButton> {
           await Provider.of<OrderList>(context, listen: false)
               .addOrder(widget.cart);
           widget.cart.clear();
+          Navigator.of(context).pushNamed(AppRoutes.ORDERS);
         } catch (error) {
           debugPrint("Erro ao adicionar pedido: $error");
         } finally {
@@ -172,6 +173,7 @@ class _CartButtonState extends State<CartButton> {
           await Provider.of<OrderList>(context, listen: false)
               .addOrder(widget.cart);
           widget.cart.clear();
+          Navigator.of(context).pushNamed(AppRoutes.ORDERS);
         } catch (error) {
           debugPrint("Erro ao adicionar pedido: $error");
         } finally {

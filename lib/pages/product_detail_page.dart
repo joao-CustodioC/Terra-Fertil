@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:terra_fertil/models/product.dart';
 import 'package:terra_fertil/models/cart.dart';
-
 import '../exception/http_exception.dart';
+import '../models/auth.dart';
 
 class ProductDetailPage extends StatefulWidget {
   const ProductDetailPage({Key? key}) : super(key: key);
@@ -19,6 +19,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   Widget build(BuildContext context) {
     final product = ModalRoute.of(context)!.settings.arguments as Product;
     final cart = Provider.of<Cart>(context, listen: false);
+    final auth = Provider.of<Auth>(context, listen: false);
+
 
     return Scaffold(
       appBar: Platform.isIOS
@@ -44,7 +46,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           ),
           onPressed: () async {
             try {
-              await product.toggleFavorite();
+              await product.toggleFavorite(auth.token ?? '', auth.userId ?? '');
             } on HttpExceptionn catch (error) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(error.toString())),
@@ -65,7 +67,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           IconButton(
             onPressed: () async {
               try {
-                await product.toggleFavorite();
+                await product.toggleFavorite(auth.token ?? '', auth.userId ?? '');
               } on HttpExceptionn catch (error) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(error.toString())),

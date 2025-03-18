@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:terra_fertil/models/auth.dart';
 import 'package:terra_fertil/models/cart.dart';
 import 'package:terra_fertil/models/product.dart';
 import 'package:terra_fertil/utils/app_routes.dart';
@@ -12,6 +13,7 @@ class ProductGridItem extends StatelessWidget {
     final msg = ScaffoldMessenger.of(context);
     final product = Provider.of<Product>(context, listen: false);
     final cart = Provider.of<Cart>(context);
+    final auth = Provider.of<Auth>(context, listen: false);
 
     return GestureDetector(
       onTap: () {
@@ -92,7 +94,7 @@ class ProductGridItem extends StatelessWidget {
                           (ctx, product, _) => IconButton(
                             onPressed: () async {
                               try {
-                                await product.toggleFavorite();
+                                await product.toggleFavorite(auth.token ?? '', auth.userId ?? '');
                               } on HttpExceptionn catch (error) {
                                 msg.showSnackBar(
                                   SnackBar(content: Text(error.toString())),
