@@ -14,51 +14,93 @@ class AuthForm extends StatefulWidget {
   State<AuthForm> createState() => _AuthFormState();
 }
 
-class _AuthFormState extends State<AuthForm> {
+class _AuthFormState extends State<AuthForm>
+    with SingleTickerProviderStateMixin {
   AuthMode _authMode = AuthMode.Login;
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  AnimationController? _controller;
+  Animation<double>? _opacityAnimation;
+  Animation<Offset>? _slideAnimation;
 
   bool _isLoading = false;
   final Map<String, String> _authData = {'email': '', 'password': ''};
 
   bool _isLogin() => _authMode == AuthMode.Login;
+
   bool _isSignUp() => _authMode == AuthMode.SignUp;
 
   void _switchAuthMode() {
     setState(() {
-      _authMode = _isLogin() ? AuthMode.SignUp : AuthMode.Login;
+      if (_isLogin()) {
+        _authMode = AuthMode.SignUp;
+        _controller?.forward();
+      } else {
+        _authMode = AuthMode.Login;
+        _controller?.reverse();
+      }
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _opacityAnimation = Tween(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller!, curve: Curves.linear));
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, -1.5),
+      end: const Offset(0, 0),
+    ).animate(CurvedAnimation(parent: _controller!, curve: Curves.linear));
+
+    // _heightAnimation?.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller?.dispose();
   }
 
   void _showDialog(String msg) {
     if (Platform.isIOS) {
       showCupertinoDialog(
         context: context,
-        builder: (ctx) => CupertinoAlertDialog(
-          title: const Text('Ocorreu um erro'),
-          content: Text(msg),
-          actions: [
-            CupertinoDialogAction(
-              child: const Text("Fechar"),
-              onPressed: () => Navigator.of(ctx).pop(),
+        builder:
+            (ctx) => CupertinoAlertDialog(
+              title: const Text('Ocorreu um erro'),
+              content: Text(msg),
+              actions: [
+                CupertinoDialogAction(
+                  child: const Text("Fechar"),
+                  onPressed: () => Navigator.of(ctx).pop(),
+                ),
+              ],
             ),
-          ],
-        ),
       );
     } else {
       showDialog(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Ocorreu um erro'),
-          content: Text(msg),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Fechar'),
+        builder:
+            (ctx) => AlertDialog(
+              title: const Text('Ocorreu um erro'),
+              content: Text(msg),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Fechar'),
+                ),
+              ],
             ),
-          ],
-        ),
       );
     }
   }
@@ -89,9 +131,7 @@ class _AuthFormState extends State<AuthForm> {
   InputDecoration _buildInputDecoration(String label) {
     return InputDecoration(
       labelText: label,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
     );
   }
@@ -102,11 +142,9 @@ class _AuthFormState extends State<AuthForm> {
 
     return Card(
       elevation: 12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
         padding: const EdgeInsets.all(16),
         height: _isLogin() ? 320 : 420,
@@ -115,7 +153,6 @@ class _AuthFormState extends State<AuthForm> {
           key: _formKey,
           child: Column(
             children: [
-              // Campo E-mail
               TextFormField(
                 decoration: _buildInputDecoration('E-mail'),
                 keyboardType: TextInputType.emailAddress,
@@ -130,14 +167,12 @@ class _AuthFormState extends State<AuthForm> {
                 },
               ),
               const SizedBox(height: 15),
-              // Campo Senha
               TextFormField(
                 decoration: _buildInputDecoration('Senha'),
                 obscureText: true,
                 controller: _passwordController,
-                textInputAction: _isSignUp()
-                    ? TextInputAction.next
-                    : TextInputAction.done,
+                textInputAction:
+                    _isSignUp() ? TextInputAction.next : TextInputAction.done,
                 onSaved: (value) => _authData['password'] = value ?? '',
                 validator: (value) {
                   final pass = value ?? '';
@@ -148,32 +183,47 @@ class _AuthFormState extends State<AuthForm> {
                 },
               ),
               const SizedBox(height: 15),
-              if (_isSignUp())
-                TextFormField(
-                  decoration: _buildInputDecoration('Confirmar Senha'),
-                  obscureText: true,
-                  validator: (value) {
-                    final confirmPass = value ?? '';
-                    if (confirmPass != _passwordController.text) {
-                      return 'As senhas não conferem.';
-                    }
-                    return null;
-                  },
+              AnimatedContainer(
+                constraints: BoxConstraints(
+                  minHeight: _isLogin() ? 0 : 60,
+                  maxHeight: _isLogin() ? 0 : 120,
                 ),
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.linear,
+                child: FadeTransition(
+                  opacity: _opacityAnimation!,
+                  child: SlideTransition(
+                    position: _slideAnimation!,
+                    child: TextFormField(
+                      decoration: _buildInputDecoration('Confirmar Senha'),
+                      obscureText: true,
+                      validator: (value) {
+                        final confirmPass = value ?? '';
+                        if (confirmPass != _passwordController.text) {
+                          return 'As senhas não conferem.';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ),
+              ),
               const SizedBox(height: 20),
               _isLoading
                   ? const CircularProgressIndicator()
                   : ElevatedButton(
-                onPressed: _submit,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 30, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+                    onPressed: _submit,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 30,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: Text(_isLogin() ? 'Entrar' : 'Registrar'),
                   ),
-                ),
-                child: Text(_isLogin() ? 'Entrar' : 'Registrar'),
-              ),
               const Spacer(),
               TextButton(
                 onPressed: _switchAuthMode,

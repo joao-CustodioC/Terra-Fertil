@@ -58,6 +58,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/auth_bg.png
+    - assets/images/product-placeholder.png
   fonts:
     - family: Lato
       fonts:

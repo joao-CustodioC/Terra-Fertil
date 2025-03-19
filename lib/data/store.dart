@@ -12,10 +12,8 @@ class Store {
       final prefs = await SharedPreferences.getInstance();
       final jsonString = jsonEncode(value);
       final success = await prefs.setString(key, jsonString);
-      print("Tentativa de salvar no SharedPreferences: $jsonString");
       return success;
     } catch (e) {
-      print("Erro ao salvar no SharedPreferences: $e");
       return false;
     }
   }
@@ -31,10 +29,8 @@ class Store {
   static Future<Map<String, dynamic>> getMap(String key) async {
     try {
       final jsonString = await getString(key);
-      print("Dados recuperados do SharedPreferences: $jsonString");
       return jsonString.isNotEmpty ? jsonDecode(jsonString) : {};
     } catch (e) {
-      print("Erro ao recuperar os dados do SharedPreferences: $e");
       return {};
     }
   }

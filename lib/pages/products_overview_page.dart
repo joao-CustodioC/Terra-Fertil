@@ -58,7 +58,7 @@ class _ProductsOverviewPageState extends State<ProductsOverviewPage> {
                 ),
                 backgroundColor: Theme.of(context).primaryColor,
                 middle: Text(
-                  'Minha Loja',
+                  'Terra Fértil',
                   style: TextStyle(color: CupertinoColors.white),
                 ),
                 trailing: Row(
@@ -126,7 +126,7 @@ class _ProductsOverviewPageState extends State<ProductsOverviewPage> {
                 ),
               )
               : AppBar(
-                title: Text('Minha Loja'),
+                title: Text('Terra Fértil'),
                 backgroundColor: Theme.of(context).primaryColor,
                 actions: [
                   Consumer<Cart>(

@@ -56,15 +56,6 @@ class Auth with ChangeNotifier {
       _expiryDate = DateTime.now().add(
         Duration(seconds: int.parse(body['expiresIn'])),
       );
-      final success = await Store.saveMap('userData', {
-        'token': _token,
-        'email': _email,
-        'userId': _userId,
-        'expiryDate': _expiryDate!.toIso8601String(),
-      });
-
-      print("Dados salvos com sucesso? $success");
-
       notifyListeners();
     }
   }
@@ -73,11 +64,6 @@ class Auth with ChangeNotifier {
     if (isAuth) return;
 
     final userData = await Store.getMap('userData');
-
-    if (userData.isEmpty || !userData.containsKey('token')) {
-      print("Nenhum dado de usuário salvo ou dados inválidos.");
-      return;
-    }
 
     final expiryDate = DateTime.tryParse(userData['expiryDate'] ?? '');
     if (expiryDate == null || expiryDate.isBefore(DateTime.now())) {
@@ -89,9 +75,6 @@ class Auth with ChangeNotifier {
     _userId = userData['userId'];
     _email = userData['email'];
     _expiryDate = expiryDate;
-
-    print("Usuário autenticado automaticamente: $_email");
-
     notifyListeners();
   }
 

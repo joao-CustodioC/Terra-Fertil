@@ -12,34 +12,40 @@ class AuthPage extends StatefulWidget {
 class _AuthPageState extends State<AuthPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  late final Animation<Offset> _slideAnimation;
-  late final Animation<double> _scaleAnimation;
-  bool _showForm = false;
+  late final Animation<Offset> _logoAnimation;
+  late final Animation<Offset> _titleAnimation;
+  late final Animation<Offset> _formAnimation;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(milliseconds: 1500),
     );
 
-    _slideAnimation = Tween<Offset>(
+    _logoAnimation = Tween<Offset>(
       begin: const Offset(0, -1),
       end: Offset.zero,
     ).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeOut),
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+    _titleAnimation = Tween<Offset>(
+      begin: const Offset(0, -1),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+
+    _formAnimation = Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
+    ).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
 
-    _controller.forward().whenComplete(() {
-      setState(() {
-        _showForm = true;
-      });
-    });
+    _controller.forward();
   }
 
   @override
@@ -59,7 +65,7 @@ class _AuthPageState extends State<AuthPage>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SlideTransition(
-                position: _slideAnimation,
+                position: _logoAnimation,
                 child: Container(
                   width: 200,
                   child: Image.asset(
@@ -69,7 +75,7 @@ class _AuthPageState extends State<AuthPage>
                 ),
               ),
               SlideTransition(
-                position: _slideAnimation,
+                position: _titleAnimation,
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 20),
                   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 70),
@@ -95,11 +101,10 @@ class _AuthPageState extends State<AuthPage>
                   ),
                 ),
               ),
-              if (_showForm)
-                ScaleTransition(
-                  scale: _scaleAnimation,
-                  child: const AuthForm(),
-                ),
+              SlideTransition(
+                position: _formAnimation,
+                child: const AuthForm(),
+              ),
             ],
           ),
         ),

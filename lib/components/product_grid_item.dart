@@ -45,9 +45,11 @@ class ProductGridItem extends StatelessWidget {
                 borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                 child: Hero(
                   tag: product.id,
-                  child: FadeInImage.assetNetwork(
-                    placeholder: '',
-                    image: product.imageUrl,
+                  child: FadeInImage(
+                    placeholder: AssetImage(
+                        'assets/images/auth_bg.png'
+                    ),
+                    image: NetworkImage(product.imageUrl),
                     fit: BoxFit.cover,
                     width: double.infinity,
                   ),

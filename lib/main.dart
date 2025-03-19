@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Minha Loja',
+        title: 'Terra Fértil',
         theme: ThemeData(
           primaryColor: Color(0xFF1F1B24),
           scaffoldBackgroundColor: Color(0xFFE0E0E0),
