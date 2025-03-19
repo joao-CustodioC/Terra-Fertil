@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:terra_fertil/exception/auth_exception.dart';
 import 'package:terra_fertil/models/auth.dart';
-import 'package:provider/provider.dart';
 
 enum AuthMode { SignUp, Login }
 
@@ -23,16 +23,11 @@ class _AuthFormState extends State<AuthForm> {
   final Map<String, String> _authData = {'email': '', 'password': ''};
 
   bool _isLogin() => _authMode == AuthMode.Login;
-
   bool _isSignUp() => _authMode == AuthMode.SignUp;
 
   void _switchAuthMode() {
     setState(() {
-      if (_isLogin()) {
-        _authMode = AuthMode.SignUp;
-      } else {
-        _authMode = AuthMode.Login;
-      }
+      _authMode = _isLogin() ? AuthMode.SignUp : AuthMode.Login;
     });
   }
 
@@ -41,7 +36,7 @@ class _AuthFormState extends State<AuthForm> {
       showCupertinoDialog(
         context: context,
         builder: (ctx) => CupertinoAlertDialog(
-          title: Text('Ocorreu um erro.'),
+          title: const Text('Ocorreu um erro'),
           content: Text(msg),
           actions: [
             CupertinoDialogAction(
@@ -54,14 +49,13 @@ class _AuthFormState extends State<AuthForm> {
     } else {
       showDialog(
         context: context,
-        builder:
-            (ctx) => AlertDialog(
-          title: Text('Ocorreu um erro.'),
+        builder: (ctx) => AlertDialog(
+          title: const Text('Ocorreu um erro'),
           content: Text(msg),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Fechar'),
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Fechar'),
             ),
           ],
         ),
@@ -83,9 +77,9 @@ class _AuthFormState extends State<AuthForm> {
       } else {
         await auth.signup(_authData['email']!, _authData['password']!);
       }
-    } on AuthException catch (errors) {
-      _showDialog(errors.toString());
-    } catch (errors) {
+    } on AuthException catch (error) {
+      _showDialog(error.toString());
+    } catch (error) {
       _showDialog('Ocorreu um erro inesperado.');
     } finally {
       setState(() => _isLoading = false);
@@ -95,7 +89,9 @@ class _AuthFormState extends State<AuthForm> {
   InputDecoration _buildInputDecoration(String label) {
     return InputDecoration(
       labelText: label,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
       contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
     );
   }
@@ -105,25 +101,28 @@ class _AuthFormState extends State<AuthForm> {
     final deviceSize = MediaQuery.of(context).size;
 
     return Card(
-      elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      elevation: 12,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
         padding: const EdgeInsets.all(16),
-        height: _isLogin() ? 310 : 400,
-        width: deviceSize.width * 0.8,
+        height: _isLogin() ? 320 : 420,
+        width: deviceSize.width * 0.85,
         child: Form(
           key: _formKey,
           child: Column(
             children: [
+              // Campo E-mail
               TextFormField(
                 decoration: _buildInputDecoration('E-mail'),
-                textInputAction: TextInputAction.next,
                 keyboardType: TextInputType.emailAddress,
-                onSaved: (email) => _authData['email'] = email ?? '',
-                validator: (_email) {
-                  final email = _email ?? '';
+                textInputAction: TextInputAction.next,
+                onSaved: (value) => _authData['email'] = value ?? '',
+                validator: (value) {
+                  final email = value ?? '';
                   if (email.trim().isEmpty || !email.contains('@')) {
                     return 'Informe um e-mail válido.';
                   }
@@ -131,15 +130,18 @@ class _AuthFormState extends State<AuthForm> {
                 },
               ),
               const SizedBox(height: 15),
+              // Campo Senha
               TextFormField(
                 decoration: _buildInputDecoration('Senha'),
-                textInputAction: TextInputAction.next,
-                controller: _passwordController,
                 obscureText: true,
-                onSaved: (password) => _authData['password'] = password ?? '',
-                validator: (_password) {
-                  final password = _password ?? '';
-                  if (password.isEmpty || password.length < 6) {
+                controller: _passwordController,
+                textInputAction: _isSignUp()
+                    ? TextInputAction.next
+                    : TextInputAction.done,
+                onSaved: (value) => _authData['password'] = value ?? '',
+                validator: (value) {
+                  final pass = value ?? '';
+                  if (pass.length < 6) {
                     return 'Informe uma senha válida (mín. 6 caracteres).';
                   }
                   return null;
@@ -150,31 +152,28 @@ class _AuthFormState extends State<AuthForm> {
                 TextFormField(
                   decoration: _buildInputDecoration('Confirmar Senha'),
                   obscureText: true,
-                  validator: (_confirmPassword) {
-                    final confirmPassword = _confirmPassword ?? '';
-                    if (confirmPassword != _passwordController.text) {
+                  validator: (value) {
+                    final confirmPass = value ?? '';
+                    if (confirmPass != _passwordController.text) {
                       return 'As senhas não conferem.';
                     }
                     return null;
                   },
                 ),
-              const SizedBox(height: 15),
-              if (_isLoading)
-                const CircularProgressIndicator()
-              else
-                ElevatedButton(
-                  onPressed: _submit,
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 30,
-                      vertical: 8,
-                    ),
+              const SizedBox(height: 20),
+              _isLoading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                onPressed: _submit,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 30, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
                   ),
-                  child: Text(_isLogin() ? 'Entrar' : 'Registrar'),
                 ),
+                child: Text(_isLogin() ? 'Entrar' : 'Registrar'),
+              ),
               const Spacer(),
               TextButton(
                 onPressed: _switchAuthMode,
@@ -182,6 +181,7 @@ class _AuthFormState extends State<AuthForm> {
                   _isLogin()
                       ? 'Não possui conta? REGISTRAR'
                       : 'Já possui conta? ENTRAR',
+                  style: const TextStyle(fontSize: 16),
                 ),
               ),
             ],
